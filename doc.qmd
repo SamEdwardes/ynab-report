@@ -1,10 +1,11 @@
 ---
 title: YNAB Report
+subtitle: Monthly summary of YNAB spending data.
 date: today
 format:
     html:
         toc: true
-        toc_depth: 3
+        toc_depth: 4
 execute:
   echo: false
   output: false
@@ -19,9 +20,8 @@ from IPython.display import Markdown
 import altair as alt
 import arrow
 from great_tables import GT, style, loc
-```
 
-```{python}
+
 settings = {
     "base_url": "https://api.ynab.com/v1",
     "headers": {"Authorization": f"Bearer {os.environ['YNAB_PERSONAL_ACCESS_TOKEN']}"}, 
@@ -34,10 +34,9 @@ settings = {
         "ynab_beige": "#FEF9ED"
     },
 }
-```
 
-```{python}
-# Get categories
+# Get data from YNAB
+# (1) Category data
 path = Path(".cache/groups.parquet")
 
 if not path.exists():
@@ -74,10 +73,8 @@ else:
     print("Using cached groups")
     groups = pl.read_parquet(path)
     categories = pl.read_parquet(".cache/categories.parquet")
-```
 
-```{python}
-# Get transactions
+# (2) Transaction data
 path = Path(".cache/transactions.parquet")
 
 if not path.exists():
@@ -100,9 +97,9 @@ if not path.exists():
 else:
     print("Using cached transactions")
     transactions = pl.read_parquet(path)
-```
 
-```{python}
+# Create a DataFrame that contains all of the desired dates. This will be used to join
+# to other dataframes before platting so that no dates are missing.
 date_range = pl.date_range(
     transactions.get_column("date").min(), 
     transactions.get_column("date").max(), 
@@ -113,21 +110,9 @@ date_range = pl.date_range(
 ).to_frame()
 ```
 
-```{python}
-category_summary = (
-    transactions.group_by("group_name", "category_name")
-    .agg(
-        pl.col("amount").sum().abs().alias("amount"),
-    )
-    .sort("amount", descending=True)
-    .filter(
-        pl.col("amount").abs() > 0,
-        pl.col("group_name").is_not_null(),
-    )
-)
-```
-
 ## Monthly Summary
+
+Monthly summary of spending by category and month.
 
 ```{python}
 # | output: true
@@ -147,6 +132,7 @@ category_monthly_summary = (
     )
     .sort("month", descending=False)
 )
+
 category_monthly_summary_for_gt = (
     category_monthly_summary
     .filter(pl.col("group_name") != "Internal Master Category")
@@ -163,6 +149,11 @@ category_monthly_summary_for_gt = (
             pl.col("category_name").str.replace_all(" ", "-").str.replace_all(r"[^a-zA-Z-]", "").str.strip_chars("-").str.to_lowercase()
         ).alias("category_name"),
     )
+    .with_columns(
+        pl.col("Total").sum().over("group_name").alias("Group Total")
+    )
+    .sort("Group Total", "Total", descending=True)
+    .select(pl.col("*").exclude("Group Total"))
 )
 
 (
@@ -176,8 +167,15 @@ category_monthly_summary_for_gt = (
         [style.fill(settings["colours"]["ynab_blue_light"]), style.text(color="white", weight="bold")],
         loc.row_groups(),
     )
+    .tab_style(
+        [style.text(weight="bold")],
+        [loc.stubhead(), loc.column_labels()]
+    )
+    .tab_style(
+        [style.text(weight="bold")],
+        loc.header()
+    )
     .tab_stubhead("Category")
-    .tab_spanner(label="Amount", columns=pl.selectors.all())
     .fmt_currency(decimals=0)
     .fmt_markdown(pl.selectors.string())
     .data_color(
@@ -193,6 +191,18 @@ category_monthly_summary_for_gt = (
 
 ```{python}
 # | output: true
+category_summary = (
+    transactions.group_by("group_name", "category_name")
+    .agg(
+        pl.col("amount").sum().abs().alias("amount"),
+    )
+    .sort("amount", descending=True)
+    .filter(
+        pl.col("amount").abs() > 0,
+        pl.col("group_name").is_not_null(),
+    )
+)
+
 for category in category_summary.sort("amount", descending=True).get_column("category_name").drop_nulls().to_list():
     # filter data
     df = (
@@ -246,6 +256,8 @@ for category in category_summary.sort("amount", descending=True).get_column("cat
         )
     )
 
-    display(Markdown(f"### {category}"))
-    fig.show()
+    display(
+        Markdown(f"### {category}"),
+        fig
+    )
 ```
