@@ -1,0 +1,251 @@
+---
+title: YNAB Report
+date: today
+format:
+    html:
+        toc: true
+        toc_depth: 3
+execute:
+  echo: false
+  output: false
+---
+
+```{python}
+import polars as pl
+import httpx
+import os
+from pathlib import Path
+from IPython.display import Markdown
+import altair as alt
+import arrow
+from great_tables import GT, style, loc
+```
+
+```{python}
+settings = {
+    "base_url": "https://api.ynab.com/v1",
+    "headers": {"Authorization": f"Bearer {os.environ['YNAB_PERSONAL_ACCESS_TOKEN']}"}, 
+    "budget_id": "3609ac7a-1c56-4ef7-9a5b-8a13aa31c6aa",
+    "colours": {
+        "ynab_blue_dark": "#1D1F58",
+        "ynab_blue_middle": "#545BFE",
+        "ynab_blue_light": "#7583FF",
+        "ynab_green": "#84DD3E",
+        "ynab_beige": "#FEF9ED"
+    },
+}
+```
+
+```{python}
+# Get categories
+path = Path(".cache/groups.parquet")
+
+if not path.exists():
+    print("Downloading groups")
+    with httpx.Client(base_url=settings["base_url"], headers=settings['headers']) as client:
+        response = client.get(f"/budgets/{settings['budget_id']}/categories")
+
+    _groups = []
+    for group in response.json()["data"]["category_groups"]:
+        _groups.append(
+            {
+                "group_id": group["id"],
+                "group_name": group["name"],
+            }
+        )
+
+    groups = pl.DataFrame(_groups)
+    groups.write_parquet(path)
+
+    _categories = []
+    for group in response.json()["data"]["category_groups"]:
+        group_id = group["id"]
+        for category in group["categories"]:
+            _categories.append(
+                {
+                    "category_id": category["id"],
+                    "category_name": category["name"],
+                    "group_id": group_id,
+                }
+            )
+    categories = pl.DataFrame(_categories)
+    categories.write_parquet(".cache/categories.parquet")
+else:
+    print("Using cached groups")
+    groups = pl.read_parquet(path)
+    categories = pl.read_parquet(".cache/categories.parquet")
+```
+
+```{python}
+# Get transactions
+path = Path(".cache/transactions.parquet")
+
+if not path.exists():
+    print("Downloading transactions")
+    with httpx.Client(base_url=settings["base_url"], headers=settings['headers']) as client:
+        transactions_response = client.get(f"/budgets/{settings['budget_id']}/transactions")
+
+    transactions = (
+        pl
+        .DataFrame(transactions_response.json()["data"]["transactions"])
+        .join(categories.drop("category_name"), how='left', on='category_id', validate="m:1", coalesce=False)
+        .join(groups, how='left', on='group_id', validate="m:1", coalesce=False)
+        .with_columns(
+            pl.col("date").cast(pl.Date),
+            pl.col("amount").cast(pl.Float64) / 1_000,
+        )
+        .sort("date", descending=True)
+    )
+    transactions.write_parquet(path)
+else:
+    print("Using cached transactions")
+    transactions = pl.read_parquet(path)
+```
+
+```{python}
+date_range = pl.date_range(
+    transactions.get_column("date").min(), 
+    transactions.get_column("date").max(), 
+    "1mo", 
+    eager=True
+).alias(
+    "month"
+).to_frame()
+```
+
+```{python}
+category_summary = (
+    transactions.group_by("group_name", "category_name")
+    .agg(
+        pl.col("amount").sum().abs().alias("amount"),
+    )
+    .sort("amount", descending=True)
+    .filter(
+        pl.col("amount").abs() > 0,
+        pl.col("group_name").is_not_null(),
+    )
+)
+```
+
+## Monthly Summary
+
+```{python}
+# | output: true
+#| column: screen-inset
+category_monthly_summary = (
+    transactions
+    .with_columns(
+        pl.col("date").dt.round("1mo").alias("month"),
+    )
+    .group_by("month", "group_name", "category_name")
+    .agg(
+        pl.col("amount").sum().abs().alias("amount"),
+    )
+    .filter(
+        pl.col("amount").abs() > 0,
+        pl.col("group_name").is_not_null(),
+    )
+    .sort("month", descending=False)
+)
+category_monthly_summary_for_gt = (
+    category_monthly_summary
+    .filter(pl.col("group_name") != "Internal Master Category")
+    .with_columns(
+        pl.col("month").dt.strftime("%b %Y").alias("month"),
+    )
+    .pivot(index=["category_name", "group_name"], on="month", values="amount")
+    .fill_null(0)
+    .with_columns(
+        pl.sum_horizontal(pl.selectors.numeric()).alias("Total"),
+        pl.format(
+            "[{}](#{})", 
+            pl.col("category_name"), 
+            pl.col("category_name").str.replace_all(" ", "-").str.replace_all(r"[^a-zA-Z-]", "").str.strip_chars("-").str.to_lowercase()
+        ).alias("category_name"),
+    )
+)
+
+(
+    GT(
+        category_monthly_summary_for_gt, 
+        rowname_col="category_name", 
+        groupname_col="group_name"
+    )
+    .tab_header("Spending", subtitle="Monthly Spending by Category, Group, and Month")
+    .tab_style(
+        [style.fill(settings["colours"]["ynab_blue_light"]), style.text(color="white", weight="bold")],
+        loc.row_groups(),
+    )
+    .tab_stubhead("Category")
+    .tab_spanner(label="Amount", columns=pl.selectors.all())
+    .fmt_currency(decimals=0)
+    .fmt_markdown(pl.selectors.string())
+    .data_color(
+        domain=[0, 3_000],
+        palette=["white", "yellow", "red"],
+        na_color="white",
+        columns=(pl.selectors.numeric() - pl.selectors.contains("Total")),
+    )
+)
+```
+
+## Monthly spending by category
+
+```{python}
+# | output: true
+for category in category_summary.sort("amount", descending=True).get_column("category_name").drop_nulls().to_list():
+    # filter data
+    df = (
+        category_monthly_summary
+        .sort("month")
+        .upsample(time_column="month", every="1mo")
+        .filter(pl.col("category_name") == category)
+        .join(date_range, on="month", how="full", coalesce=True)
+        .fill_null(0)
+    )
+    if df.get_column("amount").sum() == 0:
+        continue
+    elif category == "Uncategorized":
+        continue
+    elif df.get_column("amount").sum() == 0:
+        continue
+
+    # Create plot
+    group = df.get_column("group_name").drop_nulls().first()
+    total_amount = df.get_column("amount").sum()
+    avg_amount = (
+        df
+        .filter(pl.col("month") < arrow.now().floor('month').date())
+        .get_column("amount")
+        .mean()
+    )
+    max_amount = df.get_column("amount").max()
+
+    base = (
+        alt
+        .Chart(df)
+        .encode(
+            x=alt.X("month(month):T", axis=alt.Axis(format='%b'), title="Month"),
+            y=alt.Y("amount:Q").axis(format='$,.0f').title("Amount").scale(domainMax=max_amount * 1.1),
+            text=alt.Text("amount", format='$,.0f'),
+        )
+    )
+
+    bar = base.mark_bar()
+    text = base.mark_text(align='left', dy=-10, dx=25)
+        
+    rule = alt.Chart().mark_rule(color='red').encode(
+        y=alt.datum(avg_amount)
+    )
+
+    fig = (bar + text + rule).interactive().properties(
+        width='container',
+        title=alt.Title(
+            text=f"{group}: {category}", 
+            subtitle=f'Total amount ${total_amount:,.0f}. Average amount ${avg_amount:,.0f}.',
+        )
+    )
+
+    display(Markdown(f"### {category}"))
+    fig.show()
+```
