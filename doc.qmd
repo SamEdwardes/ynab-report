@@ -110,7 +110,7 @@ date_range = pl.date_range(
 ).to_frame()
 ```
 
-## Monthly Summary
+## Summary
 
 Monthly summary of spending by category and month.
 
@@ -179,7 +179,7 @@ category_monthly_summary_for_gt = (
     .fmt_currency(decimals=0)
     .fmt_markdown(pl.selectors.string())
     .data_color(
-        domain=[0, 3_000],
+        domain=[0, 4_000],
         palette=["white", "yellow", "red"],
         na_color="white",
         columns=(pl.selectors.numeric() - pl.selectors.contains("Total")),
@@ -187,7 +187,7 @@ category_monthly_summary_for_gt = (
 )
 ```
 
-## Monthly spending by category
+## Category Charts 
 
 ```{python}
 # | output: true
@@ -201,14 +201,32 @@ category_summary = (
         pl.col("amount").abs() > 0,
         pl.col("group_name").is_not_null(),
     )
+    .with_columns(
+        pl.col("amount").sum().over("group_name").alias("group_total")
+    )
+    .sort("group_total", "amount", descending=True)
 )
 
-for category in category_summary.sort("amount", descending=True).get_column("category_name").drop_nulls().to_list():
+completed_groups = []
+
+for i in category_summary.select("group_name", "category_name").to_dicts():
+    group = i["group_name"]
+    category = i["category_name"]
+
+    if group is None or category is None:
+        continue
+    if group == "Internal Master Category":
+        continue
+
+    if group not in completed_groups:
+        display(Markdown(f"### {group.upper()}"))
+        completed_groups.append(group)
+
     # filter data
     df = (
         category_monthly_summary
         .sort("month")
-        .upsample(time_column="month", every="1mo")
+        # .upsample(time_column="month", every="1mo")
         .filter(pl.col("category_name") == category)
         .join(date_range, on="month", how="full", coalesce=True)
         .fill_null(0)
@@ -248,7 +266,7 @@ for category in category_summary.sort("amount", descending=True).get_column("cat
         y=alt.datum(avg_amount)
     )
 
-    fig = (bar + text + rule).interactive().properties(
+    fig = (bar + text + rule).properties(
         width='container',
         title=alt.Title(
             text=f"{group}: {category}", 
@@ -257,7 +275,7 @@ for category in category_summary.sort("amount", descending=True).get_column("cat
     )
 
     display(
-        Markdown(f"### {category}"),
+        Markdown(f"#### {category}"),
         fig
     )
 ```
