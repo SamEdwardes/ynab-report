@@ -7,8 +7,9 @@ format:
         toc: true
         toc_depth: 4
 execute:
-  echo: false
-  output: false
+    enabled: true
+    echo: false
+    output: false
 ---
 
 ```{python}
@@ -39,7 +40,7 @@ settings = {
 # (1) Category data
 path = Path(".cache/groups.parquet")
 
-if not path.exists():
+if not path.exists() or not os.environ.get("YNAB_DEV"):
     print("Downloading groups")
     with httpx.Client(base_url=settings["base_url"], headers=settings['headers']) as client:
         response = client.get(f"/budgets/{settings['budget_id']}/categories")
@@ -68,7 +69,10 @@ if not path.exists():
                 }
             )
     categories = pl.DataFrame(_categories)
-    categories.write_parquet(".cache/categories.parquet")
+
+    if os.environ.get("YNAB_DEV"):
+        categories.write_parquet(".cache/categories.parquet")
+
 else:
     print("Using cached groups")
     groups = pl.read_parquet(path)
@@ -77,7 +81,7 @@ else:
 # (2) Transaction data
 path = Path(".cache/transactions.parquet")
 
-if not path.exists():
+if not path.exists() or not os.environ.get("YNAB_DEV"):
     print("Downloading transactions")
     with httpx.Client(base_url=settings["base_url"], headers=settings['headers']) as client:
         transactions_response = client.get(f"/budgets/{settings['budget_id']}/transactions")
@@ -93,10 +97,12 @@ if not path.exists():
         )
         .sort("date", descending=True)
     )
-    transactions.write_parquet(path)
+    if os.environ.get("YNAB_DEV"):
+        transactions.write_parquet(path)
 else:
     print("Using cached transactions")
-    transactions = pl.read_parquet(path)
+    if os.environ.get("YNAB_DEV"):
+        transactions = pl.read_parquet(path)
 
 # Create a DataFrame that contains all of the desired dates. This will be used to join
 # to other dataframes before platting so that no dates are missing.
