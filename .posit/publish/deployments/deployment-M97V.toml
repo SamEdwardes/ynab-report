@@ -10,9 +10,9 @@ id = '6981f995-7fdd-4daf-adb9-613ae59cc6e9'
 dashboard_url = 'https://pct.edwardes.xyz/connect/#/apps/6981f995-7fdd-4daf-adb9-613ae59cc6e9'
 direct_url = 'https://pct.edwardes.xyz/content/6981f995-7fdd-4daf-adb9-613ae59cc6e9/'
 logs_url = 'https://pct.edwardes.xyz/connect/#/apps/6981f995-7fdd-4daf-adb9-613ae59cc6e9/logs'
-deployed_at = '2024-10-26T10:22:25-07:00'
-bundle_id = '48'
-bundle_url = 'https://pct.edwardes.xyz/__api__/v1/content/6981f995-7fdd-4daf-adb9-613ae59cc6e9/bundles/48/download'
+deployed_at = '2024-10-27T18:17:57Z'
+bundle_id = '51'
+bundle_url = 'https://pct.edwardes.xyz/__api__/v1/content/6981f995-7fdd-4daf-adb9-613ae59cc6e9/bundles/51/download'
 files = [
   '.posit/publish/YNAB Report-OMDE.toml',
   '.posit/publish/deployments/deployment-M97V.toml',
@@ -92,6 +92,7 @@ requirements = [
   "pexpect==4.9.0 ; sys_platform != 'emscripten' and sys_platform != 'win32'",
   'platformdirs==4.3.6',
   'polars-lts-cpu==1.11.0',
+  'polars-u64-idx==1.11.0',
   'prometheus-client==0.21.0',
   'prompt-toolkit==3.0.48',
   'psutil==6.1.0',
@@ -100,6 +101,7 @@ requirements = [
   'pycparser==2.22',
   'pygments==2.18.0',
   'python-dateutil==2.9.0.post0',
+  'python-dotenv==1.0.1',
   'python-json-logger==2.0.7',
   "pywin32==308 ; platform_python_implementation != 'PyPy' and sys_platform == 'win32'",
   "pywinpty==2.0.14 ; os_name == 'nt'",
@@ -131,15 +133,6 @@ requirements = [
   'widgetsnbextension==4.0.13',
   'zipp==3.20.2'
 ]
-
-[deployment_error]
-code = 'deployFailed'
-message = 'An error occurred while running your content. (Error code: render-python-code-error)'
-operation = 'publish/runContent'
-
-[deployment_error.data]
-ConnectErrorCode = 'render-python-code-error'
-DocumentationLink = 'https://docs.posit.co/connect/user/troubleshooting/#render-python-code-error'
 
 [configuration]
 '$schema' = 'https://cdn.posit.co/publisher/schemas/posit-publishing-schema-v3.json'

@@ -1041,6 +1041,19 @@ wheels = [
 ]
 
 [[package]]
+name = "polars-u64-idx"
+version = "1.11.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/63/fd/72c604243580811afa98d796d36aa9f6752020ba0b97ae7a170d1e304182/polars_u64_idx-1.11.0.tar.gz", hash = "sha256:3c623f0f93d7d95dc162cd7fd84d248fdbc3d40665907960dc36be222caf7f5d", size = 4074331 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/67/cf/49f8c5964d1a2f70eff3e4b42ec2edba5de51830eba63330cd4c63f31301/polars_u64_idx-1.11.0-cp39-abi3-macosx_10_12_x86_64.whl", hash = "sha256:08e0d2308c81c1337e7c7201693e419ec34492cb51d5620e179599440befcc5a", size = 32834319 },
+    { url = "https://files.pythonhosted.org/packages/37/ef/92b7f6cb873f02fb0d1206fa39bb8e2756ef35bf0adaaa07ed533ccf04de/polars_u64_idx-1.11.0-cp39-abi3-macosx_11_0_arm64.whl", hash = "sha256:199209babf6731daa8103705f0b44ab6e54a6c35a94673542edbc17aed854078", size = 28809511 },
+    { url = "https://files.pythonhosted.org/packages/ce/92/41b1dd6422279aef9000b05e28f66062d23d92aede91880f89c1ab124463/polars_u64_idx-1.11.0-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:c3a0ecd84fb98bb868392d0bce367fbe7f16af6f8c22411e89e2bde76eb03f34", size = 34014773 },
+    { url = "https://files.pythonhosted.org/packages/d4/bb/90481334fc2007f0a40cd736724f7b0aa0115b47e0e4822743286f9f575c/polars_u64_idx-1.11.0-cp39-abi3-manylinux_2_24_aarch64.whl", hash = "sha256:666269028e0c9282bfda86b61eb61a9b237fd569dba645f02eb3601b483dc24b", size = 30407763 },
+    { url = "https://files.pythonhosted.org/packages/72/03/3718a6c343f975d3c023ae2faf8b516cf401fca6fab0bbdf9d7ad4844879/polars_u64_idx-1.11.0-cp39-abi3-win_amd64.whl", hash = "sha256:59ced785383c03409071570329a3a206437a7f65bb5e175347d9bf8cae507287", size = 33680707 },
+]
+
+[[package]]
 name = "prometheus-client"
 version = "0.21.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1122,6 +1135,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/66/c0/0c8b6ad9f17a802ee498c46e004a0eb49bc148f2fd230864601a86dcf6db/python-dateutil-2.9.0.post0.tar.gz", hash = "sha256:37dd54208da7e1cd875388217d5e00ebd4179249f90fb72437e91a35459a0ad3", size = 342432 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/ec/57/56b9bcc3c9c6a792fcbaf139543cee77261f3651ca9da0c93f5c1221264b/python_dateutil-2.9.0.post0-py2.py3-none-any.whl", hash = "sha256:a8b2bc7bffae282281c8140a97d3aa9c14da0b136dfe83f850eea9a5f7470427", size = 229892 },
+]
+
+[[package]]
+name = "python-dotenv"
+version = "1.0.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/bc/57/e84d88dfe0aec03b7a2d4327012c1627ab5f03652216c63d49846d7a6c58/python-dotenv-1.0.1.tar.gz", hash = "sha256:e324ee90a023d808f1959c46bcbc04446a10ced277783dc6ee09987c37ec10ca", size = 39115 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/6a/3e/b68c118422ec867fa7ab88444e1274aa40681c606d59ac27de5a5588f082/python_dotenv-1.0.1-py3-none-any.whl", hash = "sha256:f7b63ef50f1b690dddf550d03497b66d609393b40b564ed0d674909a68ebf16a", size = 19863 },
 ]
 
 [[package]]
@@ -1514,6 +1536,8 @@ dependencies = [
     { name = "ipykernel" },
     { name = "jupyter" },
     { name = "polars-lts-cpu" },
+    { name = "polars-u64-idx" },
+    { name = "python-dotenv" },
 ]
 
 [package.metadata]
@@ -1524,7 +1548,9 @@ requires-dist = [
     { name = "httpx", specifier = ">=0.27.2" },
     { name = "ipykernel", specifier = ">=6.29.5" },
     { name = "jupyter", specifier = ">=1.1.1" },
-    { name = "polars-lts-cpu", specifier = ">=1.11.0" },
+    { name = "polars-lts-cpu", specifier = "==1.11.0" },
+    { name = "polars-u64-idx", specifier = "==1.11.0" },
+    { name = "python-dotenv", specifier = ">=1.0.1" },
 ]
 
 [[package]]

@@ -1,6 +1,7 @@
 # Added by Sam Edwardes
 .cache
 .mise.toml
+.env
 
 # Quarto
 doc_files/

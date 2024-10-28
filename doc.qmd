@@ -21,6 +21,11 @@ from IPython.display import Markdown
 import altair as alt
 import arrow
 from great_tables import GT, style, loc
+from dotenv import load_dotenv
+
+
+if Path(".env").exists():
+    load_dotenv(override=True)
 
 
 settings = {
@@ -76,7 +81,8 @@ if not path.exists() or not os.environ.get("YNAB_DEV"):
 else:
     print("Using cached groups")
     groups = pl.read_parquet(path)
-    categories = pl.read_parquet(".cache/categories.parquet")
+    if os.environ.get("YNAB_DEV"):
+        categories = pl.read_parquet(".cache/categories.parquet")
 
 # (2) Transaction data
 path = Path(".cache/transactions.parquet")
@@ -196,7 +202,7 @@ category_monthly_summary_for_gt = (
 ## Category Charts 
 
 ```{python}
-# | output: true
+# | output: asis
 category_summary = (
     transactions.group_by("group_name", "category_name")
     .agg(

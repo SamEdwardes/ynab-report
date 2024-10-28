@@ -72,6 +72,7 @@ parso==0.8.4
 pexpect==4.9.0 ; sys_platform != 'emscripten' and sys_platform != 'win32'
 platformdirs==4.3.6
 polars-lts-cpu==1.11.0
+polars-u64-idx==1.11.0
 prometheus-client==0.21.0
 prompt-toolkit==3.0.48
 psutil==6.1.0
@@ -80,6 +81,7 @@ pure-eval==0.2.3
 pycparser==2.22
 pygments==2.18.0
 python-dateutil==2.9.0.post0
+python-dotenv==1.0.1
 python-json-logger==2.0.7
 pywin32==308 ; platform_python_implementation != 'PyPy' and sys_platform == 'win32'
 pywinpty==2.0.14 ; os_name == 'nt'
