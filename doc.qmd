@@ -1,7 +1,7 @@
 ---
 title: YNAB Report
 subtitle: Monthly summary of YNAB spending data.
-date: today
+date: now 
 format:
     html:
         toc: true
@@ -132,7 +132,7 @@ Monthly summary of spending by category and month.
 category_monthly_summary = (
     transactions
     .with_columns(
-        pl.col("date").dt.round("1mo").alias("month"),
+        pl.col("date").dt.truncate("1mo").alias("month"),
     )
     .group_by("month", "group_name", "category_name")
     .agg(
