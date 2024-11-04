@@ -10,9 +10,9 @@ id = '6981f995-7fdd-4daf-adb9-613ae59cc6e9'
 dashboard_url = 'https://pct.edwardes.xyz/connect/#/apps/6981f995-7fdd-4daf-adb9-613ae59cc6e9'
 direct_url = 'https://pct.edwardes.xyz/content/6981f995-7fdd-4daf-adb9-613ae59cc6e9/'
 logs_url = 'https://pct.edwardes.xyz/connect/#/apps/6981f995-7fdd-4daf-adb9-613ae59cc6e9/logs'
-deployed_at = '2024-10-27T18:17:57Z'
-bundle_id = '51'
-bundle_url = 'https://pct.edwardes.xyz/__api__/v1/content/6981f995-7fdd-4daf-adb9-613ae59cc6e9/bundles/51/download'
+deployed_at = '2024-10-28T16:59:47-04:00'
+bundle_id = '54'
+bundle_url = 'https://pct.edwardes.xyz/__api__/v1/content/6981f995-7fdd-4daf-adb9-613ae59cc6e9/bundles/54/download'
 files = [
   '.posit/publish/YNAB Report-OMDE.toml',
   '.posit/publish/deployments/deployment-M97V.toml',

@@ -2,6 +2,7 @@
 title: YNAB Report
 subtitle: Monthly summary of YNAB spending data.
 date: now 
+date-format: "dddd MMM D, YYYY @ h:mm A z"
 format:
     html:
         toc: true
@@ -22,6 +23,7 @@ import altair as alt
 import arrow
 from great_tables import GT, style, loc
 from dotenv import load_dotenv
+from textwrap import dedent
 
 
 if Path(".env").exists():
@@ -181,11 +183,7 @@ category_monthly_summary_for_gt = (
     )
     .tab_style(
         [style.text(weight="bold")],
-        [loc.stubhead(), loc.column_labels()]
-    )
-    .tab_style(
-        [style.text(weight="bold")],
-        loc.header()
+        [loc.stubhead(), loc.column_labels(), loc.header()]
     )
     .tab_stubhead("Category")
     .fmt_currency(decimals=0)
@@ -286,8 +284,37 @@ for i in category_summary.select("group_name", "category_name").to_dicts():
         )
     )
 
+    transactions_table = (
+        GT(
+            transactions
+            .filter(pl.col("category_name") == category)
+            .sort("date", descending=True)
+            .select(
+                pl.col("date").alias("Date"),
+                pl.col("amount").alias("Amount"),
+                pl.col("payee_name").alias("Payee"),
+                pl.col("memo").alias("Memo")
+            )
+        )
+        .fmt_currency(columns="Amount", decimals=2)
+        .fmt_date(columns="Date", date_style="m_day_year")
+        .tab_options(table_width="100%")
+        .sub_missing(columns="Memo", missing_text="")
+        .tab_style(
+            [style.text(weight="bold")],
+            [loc.stubhead(), loc.column_labels(), loc.header()]
+        )
+    )
+
     display(
         Markdown(f"#### {category}"),
-        fig
+        fig,
+        Markdown('::: {.callout-note collapse="true"}'),
+        Markdown(f'## {category} Transactions'),
+        transactions_table,
+        Markdown(':::'),
     )
+```
+
+```{python}
 ```
