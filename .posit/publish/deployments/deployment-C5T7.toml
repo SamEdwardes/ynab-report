@@ -2,20 +2,20 @@
 '$schema' = 'https://cdn.posit.co/publisher/schemas/posit-publishing-record-schema-v3.json'
 server_type = 'connect'
 server_url = 'https://pct.edwardes.xyz'
-client_version = '1.2.1'
-created_at = '2024-10-25T17:46:19-07:00'
-type = 'quarto'
-configuration_name = 'YNAB Report-OMDE'
-id = '6981f995-7fdd-4daf-adb9-613ae59cc6e9'
-dashboard_url = 'https://pct.edwardes.xyz/connect/#/apps/6981f995-7fdd-4daf-adb9-613ae59cc6e9'
-direct_url = 'https://pct.edwardes.xyz/content/6981f995-7fdd-4daf-adb9-613ae59cc6e9/'
-logs_url = 'https://pct.edwardes.xyz/connect/#/apps/6981f995-7fdd-4daf-adb9-613ae59cc6e9/logs'
-deployed_at = '2024-10-28T16:59:47-04:00'
-bundle_id = '54'
-bundle_url = 'https://pct.edwardes.xyz/__api__/v1/content/6981f995-7fdd-4daf-adb9-613ae59cc6e9/bundles/54/download'
+client_version = '1.8.0'
+created_at = '2025-01-20T17:12:00-08:00'
+type = 'quarto-static'
+configuration_name = 'YNAB Report-02IP'
+id = '23f5486b-89a9-4ccb-90d1-e44c56eba77a'
+dashboard_url = 'https://pct.edwardes.xyz/connect/#/apps/23f5486b-89a9-4ccb-90d1-e44c56eba77a'
+direct_url = 'https://pct.edwardes.xyz/content/23f5486b-89a9-4ccb-90d1-e44c56eba77a/'
+logs_url = 'https://pct.edwardes.xyz/connect/#/apps/23f5486b-89a9-4ccb-90d1-e44c56eba77a/logs'
+deployed_at = '2025-01-20T17:13:27-08:00'
+bundle_id = '1'
+bundle_url = 'https://pct.edwardes.xyz/__api__/v1/content/23f5486b-89a9-4ccb-90d1-e44c56eba77a/bundles/1/download'
 files = [
-  '.posit/publish/YNAB Report-OMDE.toml',
-  '.posit/publish/deployments/deployment-M97V.toml',
+  '.posit/publish/YNAB Report-02IP.toml',
+  '.posit/publish/deployments/deployment-C5T7.toml',
   'doc.qmd',
   'requirements.txt'
 ]
@@ -136,14 +136,14 @@ requirements = [
 
 [configuration]
 '$schema' = 'https://cdn.posit.co/publisher/schemas/posit-publishing-schema-v3.json'
-type = 'quarto'
+type = 'quarto-static'
 entrypoint = 'doc.qmd'
 validate = true
 files = [
   '/doc.qmd',
   '/requirements.txt',
-  '/.posit/publish/YNAB Report-OMDE.toml',
-  '/.posit/publish/deployments/deployment-M97V.toml'
+  '/.posit/publish/YNAB Report-02IP.toml',
+  '/.posit/publish/deployments/deployment-C5T7.toml'
 ]
 title = 'YNAB Report'
 secrets = ['YNAB_PERSONAL_ACCESS_TOKEN']
@@ -154,5 +154,5 @@ package_file = 'requirements.txt'
 package_manager = 'pip'
 
 [configuration.quarto]
-version = '1.5.57'
+version = '1.5.47'
 engines = ['jupyter']
