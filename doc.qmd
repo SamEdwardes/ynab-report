@@ -170,7 +170,7 @@ category_monthly_summary_for_gt = (
     .select(pl.col("*").exclude("Group Total"))
 )
 
-(
+monthly_summary_table = (
     GT(
         category_monthly_summary_for_gt, 
         rowname_col="category_name", 
@@ -188,13 +188,25 @@ category_monthly_summary_for_gt = (
     .tab_stubhead("Category")
     .fmt_currency(decimals=0)
     .fmt_markdown(pl.selectors.string())
-    .data_color(
-        domain=[0, 4_000],
-        palette=["white", "yellow", "red"],
-        na_color="white",
-        columns=(pl.selectors.numeric() - pl.selectors.contains("Total")),
-    )
 )
+
+
+for i in range(0, category_monthly_summary_for_gt.shape[0]):
+    min_value = 0
+    max_value = category_monthly_summary_for_gt[i].select(pl.selectors.numeric() - pl.selectors.contains("Total")).max_horizontal().to_list()[0]
+
+    monthly_summary_table = (
+        monthly_summary_table
+        .data_color(
+            domain=[min_value, max_value],
+            palette=["white", "yellow", "red"],
+            na_color="white",
+            rows=i,
+            columns=(pl.selectors.numeric() - pl.selectors.contains("Total")),
+        )
+    )
+
+monthly_summary_table
 ```
 
 ## Category Charts 
