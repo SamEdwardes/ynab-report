@@ -286,8 +286,12 @@ for i in category_summary.select("group_name", "category_name").to_dicts():
     )
 
     bar = base.mark_bar()
-    text = base.mark_text(align='left', dy=-10, dx=25)
-        
+    text = (
+        base
+        .transform_filter(alt.datum.amount != 0)
+        .mark_text(align='center', baseline='bottom', dy=-2)
+    )
+
     rule = alt.Chart().mark_rule(color='red').encode(
         y=alt.datum(avg_amount)
     )
