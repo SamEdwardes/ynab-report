@@ -279,7 +279,7 @@ for i in category_summary.select("group_name", "category_name").to_dicts():
         alt
         .Chart(df)
         .encode(
-            x=alt.X("month(month):T", axis=alt.Axis(format='%b'), title="Month"),
+            x=alt.X("yearmonth(month):O", axis=alt.Axis(format='%b %Y', labelAngle=90), title="Month"),
             y=alt.Y("amount:Q").axis(format='$,.0f').title("Amount").scale(domainMax=max_amount * 1.1),
             text=alt.Text("amount", format='$,.0f'),
         )
