@@ -2,6 +2,7 @@
 .cache
 .mise.toml
 .env
+doc.quarto_*
 
 # Quarto
 doc_files/
