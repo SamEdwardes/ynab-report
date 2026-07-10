@@ -7,6 +7,7 @@ format:
     html:
         toc: true
         toc_depth: 4
+        html-table-processing: none
 execute:
     enabled: true
     echo: false
@@ -15,6 +16,7 @@ execute:
 
 ```{python}
 import polars as pl
+import numpy as np
 import httpx
 import os
 from pathlib import Path
@@ -195,18 +197,57 @@ monthly_summary_table = (
 )
 
 
+# Flag monthly outliers per category using a robust z-score (median + MAD).
+# Zero-dollar months are excluded entirely from the calculation (they don't
+# count as "typical" spending, low or otherwise) so they never influence the
+# median/MAD or get colored themselves.
+#
+# The color domain starts at the category's median (not zero), so only
+# months that spend *more than typical* pick up any color at all. A month
+# is fully red once it reaches `outlier_threshold` scaled MADs above the
+# median; anything at or below the median stays white.
+month_columns = pl.selectors.numeric() - pl.selectors.contains("Total")
+outlier_threshold = 3.5  # standard "modified z-score" cutoff
+
 for i in range(0, category_monthly_summary_for_gt.shape[0]):
-    min_value = 0
-    max_value = category_monthly_summary_for_gt[i].select(pl.selectors.numeric() - pl.selectors.contains("Total")).max_horizontal().to_list()[0]
+    row_values = np.array(
+        category_monthly_summary_for_gt[i].select(month_columns).row(0)
+    )
+    nonzero_values = row_values[row_values > 0]
+
+    if nonzero_values.size == 0:
+        # No spending in any month for this category/row; nothing to color.
+        continue
+
+    median_value = np.median(nonzero_values)
+    mad = np.median(np.abs(nonzero_values - median_value))
+    mad_scaled = 1.4826 * mad  # normal-consistent scaling of MAD
+
+    if mad_scaled == 0:
+        # No spread to compare against (e.g. a single non-zero month, or
+        # identical spending every month like Rent at $4,200/mo). There's no
+        # basis to call anything an outlier, so leave the row uncolored.
+        continue
+
+    domain_min = median_value
+    # `data_color()` maps anything outside the domain to `na_color` rather
+    # than clamping it to the palette's end color, so genuine outliers above
+    # our computed cutoff would otherwise render as invisible white instead
+    # of red. Widen `domain_max` to always cover the row's actual max so the
+    # most extreme month is guaranteed to fall inside the domain.
+    domain_max = max(
+        median_value + outlier_threshold * mad_scaled,
+        nonzero_values.max(),
+    )
 
     monthly_summary_table = (
         monthly_summary_table
         .data_color(
-            domain=[min_value, max_value],
+            domain=[domain_min, domain_max],
             palette=["white", "yellow", "red"],
             na_color="white",
             rows=i,
-            columns=(pl.selectors.numeric() - pl.selectors.contains("Total")),
+            columns=month_columns,
         )
     )
 
