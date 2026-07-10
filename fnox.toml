@@ -1,0 +1,9 @@
+default_provider = "onepass"
+
+[providers.onepass]
+type = "1password"
+vault = "Dev"
+account = "my.1password.com"
+
+[secrets]
+"YNAB_PERSONAL_ACCESS_TOKEN" = { provider = "onepass", value = "op://Dev/YNAB Personal Access Token/credential" }
