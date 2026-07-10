@@ -94,14 +94,18 @@ if not path.exists() or not os.environ.get("YNAB_DEV"):
     with httpx.Client(base_url=settings["base_url"], headers=settings['headers']) as client:
         transactions_response = client.get(f"/budgets/{settings['budget_id']}/transactions")
 
+    transactions_raw = transactions_response.json()["data"]["transactions"]
+
+    # replace empty strings with None so Polars can infer a consistent schema
+    sanitized = [{k: (None if v == "" else v) for k, v in rec.items()} for rec in transactions_raw]
+
     transactions = (
-        pl
-        .DataFrame(transactions_response.json()["data"]["transactions"])
-        .join(categories.drop("category_name"), how='left', on='category_id', validate="m:1", coalesce=False)
-        .join(groups, how='left', on='group_id', validate="m:1", coalesce=False)
+        pl.DataFrame(sanitized)
+        .join(categories.drop("category_name"), how="left", on="category_id", validate="m:1", coalesce=False)
+        .join(groups, how="left", on="group_id", validate="m:1", coalesce=False)
         .with_columns(
             pl.col("date").cast(pl.Date),
-            pl.col("amount").cast(pl.Float64) / 1_000,
+            (pl.col("amount").cast(pl.Int64) / 1_000).alias("amount"),
         )
         .sort("date", descending=True)
     )
